@@ -19,13 +19,14 @@ def get_parser():
     parser.add_argument('--dataset', default='cifar10', type=str, help='dateset',
                         choices=['cifar10','cifar100'])
     parser.add_argument('--model', default='resnet32', type=str, help='model',
-                        choices=['cifarnet','resnet32', 'resnet56','squeezenet'])
+                        choices=['cifarnet','resnet32', 'resnet56', 'densenet12',
+                                 'squeezenet', 'googlenet'])
     parser.add_argument('--optim', default='SGDM', type=str, help='optimizer',
                         choices=['SGDM','Adam', 'AdamW', 'AEGD', 'AEGDW'])
     parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
     parser.add_argument('--lr_scheduler', default='multistep', type=str,
                         help='learning rate decay scheduler', choices=['multistep','cosine'])
-    parser.add_argument('--milestones', type=int, default=[50,100,150],
+    parser.add_argument('--milestones', type=int, default=150,
                         help='list of epoch indices', nargs='+')
     parser.add_argument('--gamma', default=0.1, type=float,
                         help='multiplicative factor of learning rate decay')
@@ -70,7 +71,7 @@ def build_dataset(args):
     return train_loader, test_loader
 
 
-def get_ckpt_name(dataset='cifar10', model='resnet56', optimizer='SGDM',
+def get_ckpt_name(dataset='cifar10', model='resnet56', optimizer='sgd',
                   lr=0.1, c=1, momentum=0.9, beta1=0.9, beta2=0.999):
     name = {
         'SGDM': 'lr{}-m{}'.format(lr, momentum),
@@ -97,8 +98,10 @@ def build_model(args, device, ckpt=None):
         'cifarnet': cifarnet,
         'resnet32': resnet32,
         'resnet56': resnet56,
+        'densenet12': densenet12,
         # cifar100 models
-        'squeezenet': squeezenet
+        'squeezenet': squeezenet,
+        'googlenet': googlenet
     }[args.model]()
     net = net.to(device)
     if device == 'cuda':
@@ -147,14 +150,18 @@ def train(args, net, epoch, device, data_loader, optimizer, criterion):
     for batch_idx, (inputs, targets) in enumerate(data_loader):
         inputs, targets = inputs.to(device), targets.to(device)
 
-        if args.optim in {'aegd', 'aegdw'}:
+        if args.optim in {'AEGD', 'AEGDW'}:
             def closure():
                 optimizer.zero_grad()
                 outputs = net(inputs)
                 loss = criterion(outputs, targets)
                 loss.backward()
-                return loss, outputs
-            loss, outputs = optimizer.step(closure)
+                return loss #, outputs
+            loss = optimizer.step(closure)
+            # use "loss, outputs = optimizer.step(closure)" instead
+            # if you need "outputs" to evaluate training accuracy
+            # also revise the output of the closure
+            # and the output of AEGD.step in the algorithm correspondingly
         else:
             optimizer.zero_grad()
             outputs = net(inputs)
@@ -168,15 +175,15 @@ def train(args, net, epoch, device, data_loader, optimizer, criterion):
                    loss.item()))
 
         trainloss.append(loss.item())
-        _, predicted = outputs.max(1)
-        total += targets.size(0)
-        correct += predicted.eq(targets).sum().item()
+        #_, predicted = outputs.max(1)
+        #total += targets.size(0)
+        #correct += predicted.eq(targets).sum().item()
 
     epochloss = sum(trainloss) / len(trainloss)
-    accuracy = 100. * correct / total
-    print('train acc %.3f' % accuracy)
+    #accuracy = 100. * correct / total
+    print('train loss: {:.4f}'.format(epochloss))
 
-    return accuracy, epochloss
+    return epochloss
 
 
 def test(net, device, data_loader, criterion):
@@ -190,16 +197,16 @@ def test(net, device, data_loader, criterion):
             outputs = net(inputs)
             loss = criterion(outputs, targets)
 
-            testloss.append(loss.item())
+            #testloss.append(loss.item())
             _, predicted = outputs.max(1)
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
 
-    epochloss = sum(testloss)/len(testloss)
+    #epochloss = sum(testloss)/len(testloss)
     accuracy = 100. * correct / total
-    print(' test acc %.3f' % accuracy)
+    print('test acc: {:.4f}'.format(accuracy))
 
-    return accuracy, epochloss
+    return accuracy#, epochloss
 
 
 def main():
@@ -226,14 +233,14 @@ def main():
     optimizer = create_optimizer(args, net.parameters())
     scheduler = create_lr_scheduler(args, optimizer, start_epoch)
 
-    train_accuracies = []
+    #train_accuracies = []
     train_losses = []
     test_accuracies = []
-    test_losses = []
+    #test_losses = []
 
     for epoch in range(start_epoch + 1, args.num_epochs):
-        train_acc, train_loss = train(args, net, epoch, device, train_loader, optimizer, criterion)
-        test_acc, test_loss = test(net, device, test_loader, criterion)
+        train_loss = train(args, net, epoch, device, train_loader, optimizer, criterion)
+        test_acc = test(net, device, test_loader, criterion)
         scheduler.step()
 
         # Save checkpoint.
@@ -249,15 +256,15 @@ def main():
             torch.save(state, os.path.join('checkpoint', ckpt_name))
             best_acc = test_acc
 
-        train_accuracies.append(train_acc)
+        #train_accuracies.append(train_acc)
         train_losses.append(train_loss)
         test_accuracies.append(test_acc)
-        test_losses.append(test_loss)
+        #test_losses.append(test_loss)
 
         if not os.path.isdir('curve'):
             os.mkdir('curve')
-        torch.save({'train_acc': train_accuracies, 'test_acc': test_accuracies,
-                    'train_loss': train_losses, 'test_loss': test_losses},
+        torch.save({'train_loss': train_losses, 'test_acc': test_accuracies},
+                    #'train_acc': train_accuracies 'test_loss': test_losses},
                    os.path.join('curve', ckpt_name))
 
 

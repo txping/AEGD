@@ -40,14 +40,14 @@ class AEGD(Optimizer):
 
         # Make sure the closure is defined and always called with grad enabled
         if closure is None:
-            raise ImportError('AEGD needs closure to reevaluate the gradients.')
+            raise TypeError("AEGD needs 'closure' to reevaluate the gradients.")
 
         closure = torch.enable_grad()(closure)
         loss = closure()
 
         for group in self.param_groups:
             if not 0.0 < loss+group['c']:
-                raise ValueError(r"c={} does not satisfy f(x)+c>0".format(c))
+                raise ValueError("c={} does not satisfy f(x)+c>0".format(c))
 
             # Evaluate g(x)=(f(x)+c)^{1/2}
             sqrtloss = torch.sqrt(loss.detach() + group['c'])
