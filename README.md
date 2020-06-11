@@ -26,7 +26,7 @@ Supported models for CIFAR-10 are ResNet, DenseNet and CifarNet,  for CIFAR-100 
 * AEGD: {0.1, 0.2, 0.3, 0.4}
 * AEGDW: {0.6, 0.7, 0.8, 0.9}
 
-We note that the above setting for initial step size is calibrated for training complex deep networks. In this scenario, best step size for AEGD usually falls into {0.2, 0.3} while for AEGDW is {0.7, 0.9}. In general, suitable step sizes for AEGD(W) are slightly larger than those for SGDM. The best initial step size for each method in a certain task are given in respective plots in our paper to ease your reproduction.
+We note that the above setting for initial step size is calibrated for training complex deep networks. In general, suitable step sizes for AEGD(W) are slightly larger than those for SGDM. The best initial step size for each method in a certain task are given in respective plots in our paper to ease your reproduction.
 
 Followings are examples to train ResNet-56 on CIFAR-10 using AEGD with a learning rate of 0.3
 
@@ -37,7 +37,7 @@ and train SqueezeNet on CIFAR-100 using AEGDW with a learning rate of 0.9
 ```python3
 python cifar.py --dataset cifar100 --model squeezenet --optim AEGDW --lr 0.9
 ```
-The checkpoints will be saved in the `checkpoint` folder and the data points of the learning curve will be save in the `curve` folder.
+The checkpoints will be saved in the `checkpoint` folder and the data points of the learning curve will be saved in the `curve` folder.
 
 
 ## License

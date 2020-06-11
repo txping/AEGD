@@ -21,12 +21,12 @@ def get_parser():
     parser.add_argument('--model', default='resnet32', type=str, help='model',
                         choices=['cifarnet','resnet32', 'resnet56', 'densenet12',
                                  'squeezenet', 'googlenet'])
-    parser.add_argument('--optim', default='SGDM', type=str, help='optimizer',
+    parser.add_argument('--optim', default='AEGDW', type=str, help='optimizer',
                         choices=['SGDM','Adam', 'AdamW', 'AEGD', 'AEGDW'])
     parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
     parser.add_argument('--lr_scheduler', default='multistep', type=str,
                         help='learning rate decay scheduler', choices=['multistep','cosine'])
-    parser.add_argument('--milestones', type=int, default=150,
+    parser.add_argument('--milestones', type=int, default=[150],
                         help='list of epoch indices', nargs='+')
     parser.add_argument('--gamma', default=0.1, type=float,
                         help='multiplicative factor of learning rate decay')
