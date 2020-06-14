@@ -91,7 +91,7 @@ for i in range(args.runs):
     aegdl.append(res['fas'][-1])
 
 histdata = [eml, gdl, aegdl]
-titles = ['EM', 'GD-lr3', 'AEGD-lr6']
+titles = ['EM', 'GD-lr{}'.format(args.lr[0]), 'AEGD-lr{}'.format(args.lr[1])]
 
 fig, axs = plt.subplots(1,3, figsize=(15,5))
 
