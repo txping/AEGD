@@ -30,11 +30,11 @@ We note that the above setting for initial step size is calibrated for training 
 
 Followings are examples to train ResNet-56 on CIFAR-10 using AEGD with a learning rate of 0.3
 
-```python3
+```bash
 python cifar.py --dataset cifar10 --model resnet56 --optim AEGD --lr 0.3
 ```
 and train SqueezeNet on CIFAR-100 using AEGDW with a learning rate of 0.9
-```python3
+```bash
 python cifar.py --dataset cifar100 --model squeezenet --optim AEGDW --lr 0.9
 ```
 The checkpoints will be saved in the `checkpoint` folder and the data points of the learning curve will be saved in the `curve` folder.
